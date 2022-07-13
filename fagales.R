@@ -1,41 +1,66 @@
 ########################
 # Load data sets
 ########################
-
+# Load libraries
 library(dplyr)
 library(readr)
-# Load environmental data; choosing PD as the most high resolution reported variable
-env <- list.files(path="./climate_data/spatial_data_climate/PD_P_50km", full.names = TRUE) %>% lapply(read_csv) %>% bind_rows 
-env <- data.frame(env)
-env[env == -9999] <- NA
-env$x <- round(env$x, digit = 1)
-env$y <- round(env$y, digit = 1)
-env %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> env
-env <- as.data.frame(env)
 
-# Add RPD randomizations
-rand_RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv")
-rand_RPD$x <- round(rand_RPD$x, digit = 1)
-rand_RPD$y <- round(rand_RPD$y, digit = 1)
-rand_RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> rand_RPD
-rand_RPD <- as.data.frame(rand_RPD)
-# Add significance column
-rand_RPD$RPD_significance <- as.factor(ifelse(rand_RPD$value < 0.05, "Yes", "No"))
-rand_RPD$value <- NULL
+# Load environmental data
+# We will practice reconciling data sources
 
-combined <- merge(rand_RPD, env, by = c("x", "y"))
+# Load a set of CSV spreadsheets, one per variable, and combine -- each CSV as one column
+env <- list.files(path="./climate_data/PD_P_50km", full.names = TRUE) %>% lapply(read_csv) %>% bind_rows 
+env <- data.frame(env) # Convert to dataframe
+env[env == -9999] <- NA # Recode missing data, which is coded as -9999, as NA
 
-# Add RPD
-RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv")
-names(RPD) <- c("x", "y", "RPD")
+# Let's peek at our spreadsheet, to see if it works
+head(env)
+# Discuss spreadsheet -- the types of variables: temperature and precipitation, soil, landcover (vegetation types), elevation/slope/aspect
+
+# Soon we will combine environmental data with phylogenetic diversity
+# Combining grid cells could fail due to rounding error. We will re-round and aggregate grid cells by lat and long
+env$x <- round(env$x, digit = 1) # Round longitude to nearest 0.1 degree
+env$y <- round(env$y, digit = 1) # Round latitude to nearest 0.1 degree
+env %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> env # Aggregate grid cells with identical coordinates, averaging duplicates
+env <- as.data.frame(env) # Back to data frame
+
+
+# Add RPD -- relative phylogenetic diversity
+# So this is the phylogenetic diversity of each grid cell, divided by the phylogenetic diversity where the same tree has equal branch lengths
+# Low values mean short branches (compared to the equal branch length tree) and large values mean long branches (compared to the equal branch length tree) 
+RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv") # Load CSV
+names(RPD) <- c("x", "y", "RPD") # Fix the column names
+# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
 RPD$x <- round(RPD$x, digit = 1)
 RPD$y <- round(RPD$y, digit = 1)
 RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> RPD
 RPD <- as.data.frame(RPD)
 
-combined <- merge(combined, RPD, by = c("x", "y"))
+combined <- merge(env, RPD, by = c("x", "y")) # Combined environmental dataframe with RPD dataframe
 
-# Add CANAPE
+# Check result
+head(combined)
+# We can see that a new column called RPD was added
+# Also, we see that there is much less missing data (NaN) -- this is due to the aggregation step
+
+# Add RPD randomizations -- these are essentially p-values, that we will transform into significance categories
+# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
+rand_RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv")
+rand_RPD$x <- round(rand_RPD$x, digit = 1)
+rand_RPD$y <- round(rand_RPD$y, digit = 1)
+rand_RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> rand_RPD
+rand_RPD <- as.data.frame(rand_RPD)
+# Add significance column. Here we use logicals to recode the data as significance categories
+rand_RPD$RPD_significance <- as.factor(ifelse(rand_RPD$value < 0.025, "Low", ifelse(rand_RPD$value > 0.975, "High", "NS"))) # NS is not significant, high is upper tail, low is lower tail
+# We no longer need the raw p-values, so we remove
+rand_RPD$value <- NULL
+
+combined <- merge(combined, rand_RPD, by = c("x", "y"))
+
+
+
+# Add CANAPE. This is a different type of PD randomization that tests for neo- and paleoendemism. So we use not only the tree but range size data which captures endemism
+# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
 CANAPE <- read.csv("./Fagales_CSVs_ToShare/CANAPE.csv")
 names(CANAPE) <- c("x", "y", "CANAPE")
 CANAPE$x <- round(CANAPE$x, digit = 1)
@@ -46,40 +71,50 @@ CANAPE$CANAPE <- as.factor(CANAPE$CANAPE)
 
 combined <- merge(combined, CANAPE, by = c("x", "y"))
 
+# Check final dataset
+head(combined)
 
-# There is something wrong with the nod data coordinates
-## Add nodulation
-#proportion_nodulating <- read.csv("./Fagales_CSVs_ToShare/prop_nod.csv")
-#names(proportion_nodulating) <- c("x", "y", "proportion_nodulating")
-#proportion_nodulating$x <- round(proportion_nodulating$x, digit = 1)
-#proportion_nodulating$y <- round(proportion_nodulating$y, digit = 1)
-#proportion_nodulating %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> proportion_nodulating
-#proportion_nodulating <- as.data.frame(proportion_nodulating)
-#
-#
-#combined <- merge(combined, proportion_nodulating, by = c("x", "y"))
 
-# Normalize entire data frame
+# Normalize/standardize entire data frame
+# Normalizing is useful in a regression framework for interpreting variables independent of the different scale and variance of different types of measurements
+# Some statistical analyses may be affected by normalized data
 combined.scaled <- rapply(combined, scale, c("numeric","integer"), how="replace")
 combined.scaled <- as.data.frame(combined.scaled)
 
 
 
+########################
+# Now we are ready to analyze
+########################
 
+# Let's understand the relationship between RPD (treated as the response) and the environment (treated as the predictor). 
+# We will use a selection of just 8 of the environmental variables.
+env_RPD <- lm(RPD ~ aridity_index_UNEP + BIOCLIM_1 + BIOCLIM_12 + BIOCLIM_7 + BIOCLIM_17 + ISRICSOILGRIDS_new_average_nitrogen_reduced + ISRICSOILGRIDS_new_average_phx10percent_reduced + ISRICSOILGRIDS_new_average_soilorganiccarboncontent_reduced, data = combined.scaled)
+summary(env_RPD) 
+# Let's look at the output. Is the model significant overall? 
+# What predictors are significant? How much variance does the model explain in the data? (R2)
+# Any surprises?
 
+```
+DELETE ME. Point out p value of the model, p values of the variables. Point out the temperature 
+(BIO 1 and 7) and precipitation (BIO 12 and 17) and the soil variables. Discuss whether their 
+significance makes sense. Interpret the R2. Surprising or not? Then return to the variables.
+BIO12 has the largest coefficient. Because our data are normalized, we can interpret this 
+as importance. Estimate column is the coefficient (slope) -- highest absolute value for BIO12.
+BIO12 coefficient is negative. So RPD is highest in low precipitation.
 
+```
 
-# RPD model
-summary(lm(RPD ~ aridity_index_UNEP + BIOCLIM_1 + BIOCLIM_12 + BIOCLIM_7 + BIOCLIM_17 + ISRICSOILGRIDS_new_average_nitrogen_reduced + ISRICSOILGRIDS_new_average_phx10percent_reduced + ISRICSOILGRIDS_new_average_soilorganiccarboncontent_reduced, data = combined.scaled)) # Significant, Adjusted R-squared:  0.1271 
-# Precipitation most important, then aridity and temperature seasonality ~equally important
-
-# RPD significance model
-summary(lm(aridity_index_UNEP + BIOCLIM_1 + BIOCLIM_12 + BIOCLIM_7 + BIOCLIM_17 + ISRICSOILGRIDS_new_average_nitrogen_reduced + ISRICSOILGRIDS_new_average_phx10percent_reduced + ISRICSOILGRIDS_new_average_soilorganiccarboncontent_reduced ~ RPD_significance, data = combined.scaled)) # Significant, Adjusted R-squared:  0.1271 
-
-# CANAPE significance model
-summary(lm(aridity_index_UNEP + BIOCLIM_1 + BIOCLIM_12 + BIOCLIM_7 + BIOCLIM_17 + ISRICSOILGRIDS_new_average_nitrogen_reduced + ISRICSOILGRIDS_new_average_phx10percent_reduced + ISRICSOILGRIDS_new_average_soilorganiccarboncontent_reduced ~ CANAPE, data = combined.scaled)) # Significant, Adjusted R-squared:  0.1271 
+# CANAPE significance model. Let's build it, just like above for RPD, and also look at the model summaries
+env_CANAPE <- lm(aridity_index_UNEP + BIOCLIM_1 + BIOCLIM_12 + BIOCLIM_7 + BIOCLIM_17 + ISRICSOILGRIDS_new_average_nitrogen_reduced + ISRICSOILGRIDS_new_average_phx10percent_reduced + ISRICSOILGRIDS_new_average_soilorganiccarboncontent_reduced ~ CANAPE, data = combined.scaled)
 summary.aov(manova(cbind(aridity_index_UNEP, BIOCLIM_1, BIOCLIM_12, BIOCLIM_7, BIOCLIM_17, ISRICSOILGRIDS_new_average_nitrogen_reduced, ISRICSOILGRIDS_new_average_phx10percent_reduced, ISRICSOILGRIDS_new_average_soilorganiccarboncontent_reduced) ~ CANAPE, data = combined.scaled)) # Significant, Adjusted R-squared:  0.1271 
+# Here the output is a little different because CANAPE is a factor. 
+# The variables are numbered in the same order as the variables in the model. So response 1 is aridity.
+# Response 2 is BIO 1.
 
+```
+WE STOPPED HERE
+```
 
 
 ########################
@@ -105,115 +140,4 @@ lm.temp_tl <- lm(median_tl ~ bio1, data = combined.scaled)
 summary(lm.temp_tl)
 
 
-
-
-########################
-# Reload nodulation data
-########################
-
-proportion_nodulating_env <- list.files(path="./climate_data/spatial_data_climate/proportion_nodulating", full.names = TRUE) %>% lapply(read_csv) %>% bind_rows 
-proportion_nodulating_env <- data.frame(proportion_nodulating_env)
-proportion_nodulating <- read.csv("./Fagales_CSVs_ToShare/proportion_nodulating.csv")
-
-combined_nod <- merge(proportion_nodulating, proportion_nodulating_env, by = c("x", "y"))
-combined_nod[combined_nod == -9999] <- NA
-
-combined_nod$x <- round(combined_nod$x, digit = 1)
-combined_nod$y <- round(combined_nod$y, digit = 1)
-combined_nod %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> combined_nod
-combined_nod <- as.data.frame(combined_nod)
-
-
-# Normalize entire data frame
-combined_nod.scaled <- scale(combined_nod[3:41])
-combined_nod.scaled <- as.data.frame(combined_nod.scaled)
-
-########################
-# Nodulation plots
-########################
-
-# Bin size control + color palette
-library(ggplot2)
-ggplot(combined_nod, aes(x = BIOCLIM_12, y = prop_nod) ) + geom_hex(bins = 70) + scale_fill_continuous(type = "viridis") + theme_bw()
-
-ggplot(combined_nod, aes(x = aridity_index_UNEP, y = prop_nod) ) + geom_hex(bins = 70) + scale_fill_continuous(type = "viridis") + theme_bw() + ylim(0.01, 0.75) + geom_smooth(method='lm', formula = y ~ x) + labs(title="Aridity vs.\nproportion nodulating", x="Aridity index", y = "Proportion nodulating")
-summary(lm(prop_nod ~ aridity_index_UNEP + BIOCLIM_1 + BIOCLIM_12 + BIOCLIM_7 + BIOCLIM_17 + ISRICSOILGRIDS_new_average_nitrogen_reduced + ISRICSOILGRIDS_new_average_phx10percent_reduced + ISRICSOILGRIDS_new_average_soilorganiccarboncontent_reduced, data = combined_nod)) # not significantsummary(lm(prop_nod ~ aridity_index_UNEP, data = combined_nod.scaled))
-
-
-
-
-
-
-## Percent bio1 that are impossible 
-#length(na.omit(combined[combined$bio1_biotaphy_5min_global < -50, ]$bio1_biotaphy_5min_global))/length(na.omit(combined$bio1_biotaphy_5min_global)) * 100
-
-########################
-# Build environment vs. phylogenetic stats models
-########################
-
-# combined model
-lm.combined.tl <- lm(median_tl ~ bio1 + bio12 + bio17 + elevation + slope + coarse_frag + sand + soil + phx10 + needleleaf + herbaceous, data = combined.scaled)
-summary(lm.combined.tl)
-
-# Much better explanatory power for oldest divergences, but correlated with species richness
-# Consider normalizing by species richness
-lm.combined.nl97_5 <- lm(X97.5_per_tl ~ bio1 + bio12 + bio17 + elevation + slope + coarse_frag + sand + soil + phx10 + needleleaf + herbaceous, data = combined.scaled)
-summary(lm.combined.nl97_5)
-
-# Much better explanatory power for youngest divergences, but correlated with species richness
-# Consider normalizing by species richness
-lm.combined.tl2_5 <- lm(X2.5_per_tl ~ bio1 + bio12 + bio17 + elevation + slope + coarse_frag + sand + soil + phx10 + needleleaf + herbaceous, data = combined.scaled)
-summary(lm.combined.tl2_5)
-
-
-lm.combined.richness <- lm(alpha ~ bio1 + bio12 + bio17 + elevation + slope + coarse_frag + sand + soil + phx10 + needleleaf + herbaceous, data = combined.scaled)
-summary(lm.combined.richness)
-
-lm.combined.nh <- lm(median_nh.normalized ~ alpha + bio1 + bio12 + bio17 + elevation + slope + coarse_frag + sand + soil + phx10 + needleleaf + herbaceous, data = combined.scaled)
-summary(lm.combined.nh)
-
-########################
-# Some exploratory trait plots 
-########################
-
-# Assess woodiness vs. tip length -- are woody-containing communities older?
-# Coeff positive (more woodiness in older communities), R2 adj 0.4009
-summary(lm(woodiness.proportional ~ median_tl, data = combined.scaled))
-
-# Assess chloranthoid teeth vs. tip length
-# Coeff negative (less chloranthoid teeth in older communities), R2 adj 0.3154 
-summary(lm(Chloranthoid.teeth.proportional ~ median_tl, data = combined.scaled))
-
-# Assess ethereal oil cells vs. tip length
-# Coeff positive (more ethereal oil cells in older communities), R2 adj 0.3329 
-summary(lm(Ethereal.oil.cells.proportional ~ median_tl, data = combined.scaled))
-
-# Assess vessels vs. tip length
-# Coeff positive (more ethereal oil cells in older communities), R2 adj 0.01162 -- significant but very weak 
-summary(lm(Vessels.proportional ~ median_tl, data = combined.scaled))
-
-
-# Bin size control + color palette
-library(ggplot2)
-ggplot(combined, aes(x=woodiness.proportional, y=median_tl) ) + geom_hex(bins = 70) + scale_fill_continuous(type = "viridis") + theme_bw()
-ggplot(combined, aes(x=Chloranthoid.teeth.proportional, y=median_tl) ) + geom_hex(bins = 70) + scale_fill_continuous(type = "viridis") + theme_bw()
-ggplot(combined, aes(Ethereal.oil.cells.proportional, y=median_tl) ) + geom_hex(bins = 70) + scale_fill_continuous(type = "viridis") + theme_bw() + xlim(0.01, 0.3) + ylim(0, 15) # zero-inflated so need to exclude
-
-
-########################
-# Build environment vs. phylogenetic stats models
-########################
-
-# combined model
-# adj r2 0.5972, all significant except pollen and perianth merosity, chloranthoid most important, followed by stamen phyllotaxis and woodiness. Unexpected direction and large effect size for chloranthoid teeth, carpel form
-lm.combinedtraits.tl <- lm(median_tl ~ Vessels.proportional + Chloranthoid.teeth.proportional + Ethereal.oil.cells.proportional + Perianth.phyllotaxis.proportional + Perianth.merosity.proportional + Stamen.phyllotaxis.proportional + Laminar.stamens.proportional + Pollen.features.proportional + Carpel.form.proportional + Postgenital.sealing.of.the.carpel.proportional + woodiness.proportional, data = combined.scaled)
-options(scipen = 999)
-# options(scipen = 0)
-summary(lm.combinedtraits.tl)
-
-# Add in environmental data to understand how much is increased by adding traits (see environment only above)
-# Chloranthoid teeth was most important, bio1 narrowly second, stamen phyllotaxis narrowly third
-# Comparing environment only model, adj. R2 0.663 --> 0.696. Modest increase, but traits important in combined model. Presumably high internal correlation among predictors.
-lm.combinedtraitsenv.tl <- lm(median_tl ~ Vessels.proportional + Chloranthoid.teeth.proportional + Ethereal.oil.cells.proportional + Perianth.phyllotaxis.proportional + Perianth.merosity.proportional + Stamen.phyllotaxis.proportional + Laminar.stamens.proportional + Pollen.features.proportional + Carpel.form.proportional + Postgenital.sealing.of.the.carpel.proportional + woodiness.proportional + bio1 + bio12 + bio17 + elevation + slope + coarse_frag + sand + soil + phx10 + needleleaf + herbaceous, data = combined.scaled)
-summary(lm.combinedtraitsenv.tl)
 
