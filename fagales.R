@@ -1,7 +1,7 @@
 ########################
 # Load data sets
 ########################
-# Make sure you are in the correct woeking directory
+# Make sure you are in the correct working directory
 # Load libraries
 library(dplyr)
 library(readr)
