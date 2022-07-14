@@ -35,7 +35,7 @@ names(RPD) <- c("x", "y", "RPD") # Fix the column names
 RPD$x <- round(RPD$x, digit = 1) # Round longitude to nearest 0.1 degree
 RPD$y <- round(RPD$y, digit = 1) # Round latitude to nearest 0.1 degree
 RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> RPD # Aggregate grid cells with identical coordinates, averaging duplicates
-RPD <- as.data.frame(RPD)
+RPD <- as.data.frame(RPD) # Convert dplyr output back to data frame
 
 combined <- merge(env, RPD, by = c("x", "y")) # Combined environmental dataframe with RPD dataframe
 
@@ -50,7 +50,7 @@ rand_RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv")
 rand_RPD$x <- round(rand_RPD$x, digit = 1) # Round longitude to nearest 0.1 degree
 rand_RPD$y <- round(rand_RPD$y, digit = 1) # Round latitude to nearest 0.1 degree
 rand_RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> rand_RPD # Aggregate grid cells with identical coordinates, averaging duplicates
-rand_RPD <- as.data.frame(rand_RPD)
+rand_RPD <- as.data.frame(rand_RPD) # Convert dplyr output back to data frame
 # Add significance column. Here we use logicals to recode the data as significance categories
 rand_RPD$RPD_significance <- as.factor(ifelse(rand_RPD$value < 0.025, "Low", ifelse(rand_RPD$value > 0.975, "High", "NS"))) # NS is not significant, high is upper tail, low is lower tail
 # We no longer need the raw p-values, so we remove
@@ -67,7 +67,7 @@ names(CANAPE) <- c("x", "y", "CANAPE")
 CANAPE$x <- round(CANAPE$x, digit = 1) # Round longitude to nearest 0.1 degree
 CANAPE$y <- round(CANAPE$y, digit = 1) # Round latitude to nearest 0.1 degree
 CANAPE %>% group_by(x, y) %>% summarize_if(is.character, max) -> CANAPE # Aggregate grid cells with identical coordinates, averaging duplicates
-CANAPE <- as.data.frame(CANAPE)
+CANAPE <- as.data.frame(CANAPE) # Convert dplyr output back to data frame
 CANAPE$CANAPE <- as.factor(CANAPE$CANAPE)
 
 combined <- merge(combined, CANAPE, by = c("x", "y"))
