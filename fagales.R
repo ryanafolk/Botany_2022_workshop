@@ -5,6 +5,8 @@
 library(dplyr)
 library(readr)
 
+# Set the working directory to the cloned repository -- Botany 2022 Workshop folder (not subfolders)
+
 # Load environmental data
 # We will practice reconciling data sources
 
