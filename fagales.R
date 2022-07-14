@@ -26,7 +26,7 @@ env %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> env #
 env <- as.data.frame(env) # Convert dplyr output back to data frame
 
 
-# Add RPD -- relative phylogenetic diversity
+# Add RPD -- relative phylogenetic diversity to identify locations with unusual concentrations of long or short branches 
 # So this is the phylogenetic diversity of each grid cell, divided by the phylogenetic diversity where the same tree has equal branch lengths
 # Low values mean short branches (compared to the equal branch length tree) and large values mean long branches (compared to the equal branch length tree) 
 RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv") # Load CSV
