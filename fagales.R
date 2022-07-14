@@ -68,7 +68,7 @@ CANAPE$x <- round(CANAPE$x, digit = 1) # Round longitude to nearest 0.1 degree
 CANAPE$y <- round(CANAPE$y, digit = 1) # Round latitude to nearest 0.1 degree
 CANAPE %>% group_by(x, y) %>% summarize_if(is.character, max) -> CANAPE # Aggregate grid cells with identical coordinates, averaging duplicates
 CANAPE <- as.data.frame(CANAPE) # Convert dplyr output back to data frame
-CANAPE$CANAPE <- as.factor(CANAPE$CANAPE)
+CANAPE$CANAPE <- as.factor(CANAPE$CANAPE) # Setting the CANAPE column in the CANAPE dataframe as factors
 
 combined <- merge(combined, CANAPE, by = c("x", "y")) # We are combining the combined dataframe with CANAPE dataframe
 
