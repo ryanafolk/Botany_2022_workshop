@@ -1,6 +1,7 @@
 ########################
 # Load data sets
 ########################
+# Make sure you are in the correct woeking directory
 # Load libraries
 library(dplyr)
 library(readr)
@@ -30,7 +31,7 @@ env <- as.data.frame(env) # Back to data frame
 # Low values mean short branches (compared to the equal branch length tree) and large values mean long branches (compared to the equal branch length tree) 
 RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv") # Load CSV
 names(RPD) <- c("x", "y", "RPD") # Fix the column names
-# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
+# From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
 RPD$x <- round(RPD$x, digit = 1)
 RPD$y <- round(RPD$y, digit = 1)
 RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> RPD
@@ -44,7 +45,7 @@ head(combined)
 # Also, we see that there is much less missing data (NaN) -- this is due to the aggregation step
 
 # Add RPD randomizations -- these are essentially p-values, that we will transform into significance categories
-# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
+# From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
 rand_RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv")
 rand_RPD$x <- round(rand_RPD$x, digit = 1)
 rand_RPD$y <- round(rand_RPD$y, digit = 1)
@@ -60,7 +61,7 @@ combined <- merge(combined, rand_RPD, by = c("x", "y"))
 
 
 # Add CANAPE. This is a different type of PD randomization that tests for neo- and paleoendemism. So we use not only the tree but range size data which captures endemism
-# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
+# From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
 CANAPE <- read.csv("./Fagales_CSVs_ToShare/CANAPE.csv")
 names(CANAPE) <- c("x", "y", "CANAPE")
 CANAPE$x <- round(CANAPE$x, digit = 1)
