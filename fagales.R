@@ -1,6 +1,7 @@
 ########################
 # Load data sets
 ########################
+# Make sure you are in the correct working directory
 # Load libraries
 library(dplyr)
 library(readr)
@@ -24,19 +25,19 @@ head(env)
 env$x <- round(env$x, digit = 1) # Round longitude to nearest 0.1 degree
 env$y <- round(env$y, digit = 1) # Round latitude to nearest 0.1 degree
 env %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> env # Aggregate grid cells with identical coordinates, averaging duplicates
-env <- as.data.frame(env) # Back to data frame
+env <- as.data.frame(env) # Convert dplyr output back to data frame
 
 
-# Add RPD -- relative phylogenetic diversity
+# Add RPD -- relative phylogenetic diversity to identify locations with unusual concentrations of long or short branches 
 # So this is the phylogenetic diversity of each grid cell, divided by the phylogenetic diversity where the same tree has equal branch lengths
 # Low values mean short branches (compared to the equal branch length tree) and large values mean long branches (compared to the equal branch length tree) 
 RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv") # Load CSV
 names(RPD) <- c("x", "y", "RPD") # Fix the column names
-# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
-RPD$x <- round(RPD$x, digit = 1)
-RPD$y <- round(RPD$y, digit = 1)
-RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> RPD
-RPD <- as.data.frame(RPD)
+# From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
+RPD$x <- round(RPD$x, digit = 1) # Round longitude to nearest 0.1 degree
+RPD$y <- round(RPD$y, digit = 1) # Round latitude to nearest 0.1 degree
+RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> RPD # Aggregate grid cells with identical coordinates, averaging duplicates
+RPD <- as.data.frame(RPD) # Convert dplyr output back to data frame
 
 combined <- merge(env, RPD, by = c("x", "y")) # Combined environmental dataframe with RPD dataframe
 
@@ -46,32 +47,32 @@ head(combined)
 # Also, we see that there is much less missing data (NaN) -- this is due to the aggregation step
 
 # Add RPD randomizations -- these are essentially p-values, that we will transform into significance categories
-# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
+# From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
 rand_RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv")
-rand_RPD$x <- round(rand_RPD$x, digit = 1)
-rand_RPD$y <- round(rand_RPD$y, digit = 1)
-rand_RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> rand_RPD
-rand_RPD <- as.data.frame(rand_RPD)
+rand_RPD$x <- round(rand_RPD$x, digit = 1) # Round longitude to nearest 0.1 degree
+rand_RPD$y <- round(rand_RPD$y, digit = 1) # Round latitude to nearest 0.1 degree
+rand_RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> rand_RPD # Aggregate grid cells with identical coordinates, averaging duplicates
+rand_RPD <- as.data.frame(rand_RPD) # Convert dplyr output back to data frame
 # Add significance column. Here we use logicals to recode the data as significance categories
 rand_RPD$RPD_significance <- as.factor(ifelse(rand_RPD$value < 0.025, "Low", ifelse(rand_RPD$value > 0.975, "High", "NS"))) # NS is not significant, high is upper tail, low is lower tail
 # We no longer need the raw p-values, so we remove
 rand_RPD$value <- NULL
 
-combined <- merge(combined, rand_RPD, by = c("x", "y"))
+combined <- merge(combined, rand_RPD, by = c("x", "y")) # We are combining the combined dataframe with rand_RPD dataframe
 
 
 
 # Add CANAPE. This is a different type of PD randomization that tests for neo- and paleoendemism. So we use not only the tree but range size data which captures endemism
-# From here on, repeat aggregation steps (previous block, lines 20-25) from above (here not actually going back to last steps)
+# From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
 CANAPE <- read.csv("./Fagales_CSVs_ToShare/CANAPE.csv")
 names(CANAPE) <- c("x", "y", "CANAPE")
-CANAPE$x <- round(CANAPE$x, digit = 1)
-CANAPE$y <- round(CANAPE$y, digit = 1)
-CANAPE %>% group_by(x, y) %>% summarize_if(is.character, max) -> CANAPE
-CANAPE <- as.data.frame(CANAPE)
-CANAPE$CANAPE <- as.factor(CANAPE$CANAPE)
+CANAPE$x <- round(CANAPE$x, digit = 1) # Round longitude to nearest 0.1 degree
+CANAPE$y <- round(CANAPE$y, digit = 1) # Round latitude to nearest 0.1 degree
+CANAPE %>% group_by(x, y) %>% summarize_if(is.character, max) -> CANAPE # Aggregate grid cells with identical coordinates, averaging duplicates
+CANAPE <- as.data.frame(CANAPE) # Convert dplyr output back to data frame
+CANAPE$CANAPE <- as.factor(CANAPE$CANAPE) # Setting the CANAPE column in the CANAPE dataframe as factors
 
-combined <- merge(combined, CANAPE, by = c("x", "y"))
+combined <- merge(combined, CANAPE, by = c("x", "y")) # We are combining the combined dataframe with CANAPE dataframe
 
 # Check final dataset
 head(combined)
