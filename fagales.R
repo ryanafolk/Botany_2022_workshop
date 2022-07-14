@@ -32,9 +32,9 @@ env <- as.data.frame(env) # Convert dplyr output back to data frame
 RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv") # Load CSV
 names(RPD) <- c("x", "y", "RPD") # Fix the column names
 # From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
-RPD$x <- round(RPD$x, digit = 1)
-RPD$y <- round(RPD$y, digit = 1)
-RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> RPD
+RPD$x <- round(RPD$x, digit = 1) # Round longitude to nearest 0.1 degree
+RPD$y <- round(RPD$y, digit = 1) # Round latitude to nearest 0.1 degree
+RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> RPD # Aggregate grid cells with identical coordinates, averaging duplicates
 RPD <- as.data.frame(RPD)
 
 combined <- merge(env, RPD, by = c("x", "y")) # Combined environmental dataframe with RPD dataframe
@@ -47,9 +47,9 @@ head(combined)
 # Add RPD randomizations -- these are essentially p-values, that we will transform into significance categories
 # From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
 rand_RPD <- read.csv("./Fagales_CSVs_ToShare/rand_RPD_50km.csv")
-rand_RPD$x <- round(rand_RPD$x, digit = 1)
-rand_RPD$y <- round(rand_RPD$y, digit = 1)
-rand_RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> rand_RPD
+rand_RPD$x <- round(rand_RPD$x, digit = 1) # Round longitude to nearest 0.1 degree
+rand_RPD$y <- round(rand_RPD$y, digit = 1) # Round latitude to nearest 0.1 degree
+rand_RPD %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> rand_RPD # Aggregate grid cells with identical coordinates, averaging duplicates
 rand_RPD <- as.data.frame(rand_RPD)
 # Add significance column. Here we use logicals to recode the data as significance categories
 rand_RPD$RPD_significance <- as.factor(ifelse(rand_RPD$value < 0.025, "Low", ifelse(rand_RPD$value > 0.975, "High", "NS"))) # NS is not significant, high is upper tail, low is lower tail
@@ -64,9 +64,9 @@ combined <- merge(combined, rand_RPD, by = c("x", "y"))
 # From here on, repeat aggregation steps (previous block, lines 21-26) from above (here not actually going back to last steps)
 CANAPE <- read.csv("./Fagales_CSVs_ToShare/CANAPE.csv")
 names(CANAPE) <- c("x", "y", "CANAPE")
-CANAPE$x <- round(CANAPE$x, digit = 1)
-CANAPE$y <- round(CANAPE$y, digit = 1)
-CANAPE %>% group_by(x, y) %>% summarize_if(is.character, max) -> CANAPE
+CANAPE$x <- round(CANAPE$x, digit = 1) # Round longitude to nearest 0.1 degree
+CANAPE$y <- round(CANAPE$y, digit = 1) # Round latitude to nearest 0.1 degree
+CANAPE %>% group_by(x, y) %>% summarize_if(is.character, max) -> CANAPE # Aggregate grid cells with identical coordinates, averaging duplicates
 CANAPE <- as.data.frame(CANAPE)
 CANAPE$CANAPE <- as.factor(CANAPE$CANAPE)
 
