@@ -119,28 +119,31 @@ summary.aov(manova(cbind(aridity_index_UNEP, BIOCLIM_1, BIOCLIM_12, BIOCLIM_7, B
 WE STOPPED HERE
 ```
 
+# Let's look at mixed models. This is a slightly different class of regressions we might use when we are trying to control for something
+# like grid cells that are similar, or species that are related, having correlated values. Here, just to try something, we will use latitude
+library(lme4)
+# Same style model as above, but latitude as a random effect
+mixed_model_complex <- lmer(RPD ~ aridity_index_UNEP + BIOCLIM_1 + BIOCLIM_12 + BIOCLIM_7 + BIOCLIM_17 + ISRICSOILGRIDS_new_average_nitrogen_reduced + ISRICSOILGRIDS_new_average_phx10percent_reduced + ISRICSOILGRIDS_new_average_soilorganiccarboncontent_reduced + (1 | y), na.action = na.omit, data = combined.scaled)
+# We will also take advantage of the variable importance above, and fit a simple model with the best 3 predictors
+mixed_model_simple <- lmer(RPD ~ aridity_index_UNEP + BIOCLIM_12 + BIOCLIM_7 + (1 | y), na.action = na.omit, data = combined.scaled)
+
+# Now let's examine model fits and perform model selection
+# We can use standard AIC. Remember, low AIC is favored
+AIC(mixed_model_simple)
+AIC(mixed_model_complex) 
+AIC(env_RPD)
+# Okay, which model was best? How can we interpret mixed model vs. standard linear model?
+# What about simple vs. complex model?
+
+
 
 ########################
-# Some exploratory environment plots
+# An exploratory environment plot
 ########################
 
-library(ggplot2)
-ggplot(combined, aes(x = RPD_significance, y = aridity_index_UNEP, fill = RPD_significance)) + geom_violin(trim=FALSE) + geom_boxplot(width=0.1, fill="white") + labs(title="Aridity vs. RPD significance", x="RPD_significance", y = "UNEP aridity index") + ylim(quantile(combined$aridity_index_UNEP, 0.025, na.rm = TRUE), quantile(combined$aridity_index_UNEP, 0.975, na.rm = TRUE))
-ggplot(combined, aes(x = RPD_significance, y = BIOCLIM_1, fill = significance)) + geom_violin(trim=FALSE) + geom_boxplot(width=0.1, fill="white") + labs(title="Mean annual temperature vs. RPD significance", x="Significance", y = "Bio1") + ylim(quantile(combined$BIOCLIM_1, 0.025, na.rm = TRUE), quantile(combined$BIOCLIM_1, 0.975, na.rm = TRUE))
-ggplot(combined, aes(x = RPD_significance, y = BIOCLIM_12, fill = significance)) + geom_violin(trim=FALSE) + geom_boxplot(width=0.1, fill="white") + labs(title="Mean annual temperature vs. RPD significance", x="Significance", y = "Bio1") + ylim(quantile(combined$BIOCLIM_12, 0.025, na.rm = TRUE), quantile(combined$BIOCLIM_12, 0.975, na.rm = TRUE))
-
-ggplot(combined, aes(x = CANAPE, y = aridity_index_UNEP, fill = CANAPE)) + geom_violin(trim=FALSE) + geom_boxplot(width=0.1, fill="white") + labs(title="Aridity vs. RPD significance", x="RPD_significance", y = "UNEP aridity index") + ylim(quantile(combined$aridity_index_UNEP, 0.025, na.rm = TRUE), quantile(combined$aridity_index_UNEP, 0.975, na.rm = TRUE))
-
-
-# Assess alternative measures of community age -- node height and tip length essentially measure the same thing
-summary(lm(median_tl.normalized ~ median_nh.normalized, data = combined))
-
-# Assess species richness vs. node height -- confounding variable? Removed node/tip info, still somewhat significant
-summary(lm(alpha ~ median_nh.normalized, data = combined))
-
-# Mean annual temperature vs. median node height
-lm.temp_tl <- lm(median_tl ~ bio1, data = combined.scaled)
-summary(lm.temp_tl)
-
-
-
+library(ggplot2) # Load standard graphics library
+# Let's investigate how CANAPE significance categories respond to environment
+ggplot(combined, aes(x = CANAPE, y = aridity_index_UNEP, fill = CANAPE)) + geom_violin(trim=FALSE) + geom_boxplot(width=0.1, fill="white") + labs(title="Aridity vs. CANAPE significance", x="CANAPE significance", y = "UNEP aridity index") + ylim(quantile(combined$aridity_index_UNEP, 0.025, na.rm = TRUE), quantile(combined$aridity_index_UNEP, 0.975, na.rm = TRUE))
+# Categories -- mixed is a mix of paleo and neoendemism
+# So what is the relationship we recovered
+# REMINDER: Aridity index -- LOW is arid
