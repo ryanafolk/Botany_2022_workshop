@@ -23,7 +23,7 @@ head(env)
 env$x <- round(env$x, digit = 1) # Round longitude to nearest 0.1 degree
 env$y <- round(env$y, digit = 1) # Round latitude to nearest 0.1 degree
 env %>% group_by(x, y) %>% summarize_if(is.numeric, mean, na.rm = TRUE) -> env # Aggregate grid cells with identical coordinates, averaging duplicates
-env <- as.data.frame(env) # Back to data frame
+env <- as.data.frame(env) # Convert dplyr output back to data frame
 
 
 # Add RPD -- relative phylogenetic diversity
