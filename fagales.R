@@ -56,7 +56,7 @@ rand_RPD$RPD_significance <- as.factor(ifelse(rand_RPD$value < 0.025, "Low", ife
 # We no longer need the raw p-values, so we remove
 rand_RPD$value <- NULL
 
-combined <- merge(combined, rand_RPD, by = c("x", "y"))
+combined <- merge(combined, rand_RPD, by = c("x", "y")) # We are combining the combined dataframe with rand_RPD dataframe
 
 
 
@@ -70,7 +70,7 @@ CANAPE %>% group_by(x, y) %>% summarize_if(is.character, max) -> CANAPE # Aggreg
 CANAPE <- as.data.frame(CANAPE) # Convert dplyr output back to data frame
 CANAPE$CANAPE <- as.factor(CANAPE$CANAPE)
 
-combined <- merge(combined, CANAPE, by = c("x", "y"))
+combined <- merge(combined, CANAPE, by = c("x", "y")) # We are combining the combined dataframe with CANAPE dataframe
 
 # Check final dataset
 head(combined)
