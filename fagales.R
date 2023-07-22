@@ -98,14 +98,10 @@ summary(env_RPD)
 # What predictors are significant? How much variance does the model explain in the data? (R2)
 # Any surprises?
 
-```
-DELETE ME. Point out p value of the model, p values of the variables. Point out the temperature 
-(BIO 1 and 7) and precipitation (BIO 12 and 17) and the soil variables. Discuss whether their 
-significance makes sense. Interpret the R2. Surprising or not? Then return to the variables.
-BIO12 has the largest coefficient. Because our data are normalized, we can interpret this 
-as importance. Estimate column is the coefficient (slope) -- highest absolute value for BIO12.
-BIO12 coefficient is negative. So RPD is highest in low precipitation.
 
+```
+Practical for workshop attendees. Examine p value of the model, variables; similarly with R2. Surprising or not? Interpret the variables. Discuss whether their 
+significance makes sense. Normalized/standardized coefficients -- interpret these. 
 ```
 
 # CANAPE significance model. Let's build it, just like above for RPD, and also look at the model summaries
