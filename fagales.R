@@ -115,9 +115,6 @@ summary.aov(manova(cbind(aridity_index_UNEP, BIOCLIM_1, BIOCLIM_12, BIOCLIM_7, B
 # The variables are numbered in the same order as the variables in the model. So response 1 is aridity.
 # Response 2 is BIO 1.
 
-```
-WE STOPPED HERE
-```
 
 # Let's look at mixed models. This is a slightly different class of regressions we might use when we are trying to control for something
 # like grid cells that are similar, or species that are related, having correlated values. Here, just to try something, we will use latitude
