@@ -6,7 +6,7 @@
 library(dplyr)
 library(readr)
 
-# Set the working directory to the cloned repository -- Botany 2022 Workshop folder (not subfolders)
+# Set the working directory to the cloned repository -- Botany 2023 Workshop folder (not subfolders)
 
 # Load environmental data
 # We will practice reconciling data sources
@@ -98,14 +98,10 @@ summary(env_RPD)
 # What predictors are significant? How much variance does the model explain in the data? (R2)
 # Any surprises?
 
-```
-DELETE ME. Point out p value of the model, p values of the variables. Point out the temperature 
-(BIO 1 and 7) and precipitation (BIO 12 and 17) and the soil variables. Discuss whether their 
-significance makes sense. Interpret the R2. Surprising or not? Then return to the variables.
-BIO12 has the largest coefficient. Because our data are normalized, we can interpret this 
-as importance. Estimate column is the coefficient (slope) -- highest absolute value for BIO12.
-BIO12 coefficient is negative. So RPD is highest in low precipitation.
 
+```
+Practical for workshop attendees. Examine p value of the model, variables; similarly with R2. Surprising or not? Interpret the variables. Discuss whether their 
+significance makes sense. Normalized/standardized coefficients -- interpret these. 
 ```
 
 # CANAPE significance model. Let's build it, just like above for RPD, and also look at the model summaries
@@ -115,9 +111,6 @@ summary.aov(manova(cbind(aridity_index_UNEP, BIOCLIM_1, BIOCLIM_12, BIOCLIM_7, B
 # The variables are numbered in the same order as the variables in the model. So response 1 is aridity.
 # Response 2 is BIO 1.
 
-```
-WE STOPPED HERE
-```
 
 # Let's look at mixed models. This is a slightly different class of regressions we might use when we are trying to control for something
 # like grid cells that are similar, or species that are related, having correlated values. Here, just to try something, we will use latitude

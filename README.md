@@ -1,5 +1,5 @@
 # Phylodiversity practical -- Biodiversity Data Wrangling
-The R script to run things is fagales.R (a simplified version of the analyses presented in this preprint: [https://doi.org/10.1101/2023.04.17.537249]. Clone the repository locally or use  You can follow along with the script, pasting codes in the spaced out blocks and making sure no errors are returned.
+The R script to run things is fagales.R (a simplified version of the analyses presented in this preprint: [https://doi.org/10.1101/2023.04.17.537249]. Clone the repository locally or use GitHub desktop, and set your working directory to the first-level directory inside the repository. You can follow along with the script, pasting codes in the spaced out blocks and making sure no errors are returned.
 
 Here is a summary of the rest of the contents:
 
