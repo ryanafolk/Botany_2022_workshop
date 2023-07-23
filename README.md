@@ -22,11 +22,11 @@ Raw data representing climatic conditions at grid cells.
 ## Fagales_CSVs_ToShare
 Raw data representing diversity statistics at grid cells. There are many more than we will use here. The file abbreviations are like so:
 
-CANAPE.csv -- CANAPE significance categories (endemism analysis) 
-PD_P_50km.csv -- Raw Phylogenetic Diversity (PD)
-PMPD_50km.csv -- Phylogenetic Mean Pairwise Distance 
-RPD_50km.csv -- Relative Phylogenetic Diversity (RPD)
-RPE_50km.csv -- Relative Phylogenetic Endemism 
-prop_nod.csv and proportion_nodulating.csv -- two versions of 
-rand_PD_P_50km.csv -- Randomizations of PD
-rand_RPD_50km.csv -- Randomizations of RPD
+* CANAPE.csv -- CANAPE significance categories (endemism analysis) 
+* PD_P_50km.csv -- Raw Phylogenetic Diversity (PD)
+* PMPD_50km.csv -- Phylogenetic Mean Pairwise Distance 
+* RPD_50km.csv -- Relative Phylogenetic Diversity (RPD)
+* RPE_50km.csv -- Relative Phylogenetic Endemism 
+* prop_nod.csv and proportion_nodulating.csv -- two versions of 
+* rand_PD_P_50km.csv -- Randomizations of PD
+* rand_RPD_50km.csv -- Randomizations of RPD
