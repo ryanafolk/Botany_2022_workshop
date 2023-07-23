@@ -1,6 +1,10 @@
 # Phylodiversity practical -- Biodiversity Data Wrangling
 The R script to run things is fagales.R (a simplified version of the analyses presented in this preprint: [https://doi.org/10.1101/2023.04.17.537249]. Clone the repository locally or use GitHub desktop, and set your working directory to the first-level directory inside the repository. You can follow along with the script, pasting codes in the spaced out blocks and making sure no errors are returned.
 
+## SEE ALSO:
+Macroevolution module: [https://github.com/carol-siniscalchi/BiodiversityDataWrangling]
+Phenology module: [https://gist.github.com/robgur/3a21846f3ac226fe52e41e5ff7890287]
+
 Here is a summary of the rest of the contents:
 
 ## fagales.R
